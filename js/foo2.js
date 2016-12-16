@@ -9,45 +9,28 @@ function nonlin(x, deriv) {
 
 function train_neural(X, y, iteration) {
   // initialize weights
-  var syn0 = [
-    [-0.1653904, 0.11737966, -0.71922612, -0.60379702],
-    [0.60148914, 0.93652315, -0.37315164, 0.38464523],
-    [0.7527783, 0.78921333, -0.82991158, -0.92189043]
-  ];
-
-  var syn1 = [
-    [-0.66033916],
-    [0.75628501],
-    [-0.80330633],
-    [-0.15778475]
-  ];
-  
+  var syn0 = numeric.sub(numeric.mul(2, numeric.random([3, 1])), 1);
+  updateDataTable("syn0", syn0);
+  //Training loop
+  var l0 = undefined, l1 = undefined, l1_error = undefined, l1_delta = undefined;
   var i = 0;
-  var l0, l1, l2= undefined, 
-      l2_error, l2_delta, l1_error, l2_delta = undefined;
-  
   var timer = setInterval(function(){
     l0 = X;
     l1 = nonlin(numeric.dot(l0, syn0));
-    l2 = nonlin(numeric.dot(l1, syn1));
-    l2_error = numeric.sub(y, l2);
-    l2_delta = numeric.mul(l2_error, nonlin(l2, true));
-    l1_error = numeric.dot(l2_delta, numeric.transpose(syn1));
+    l1_error = numeric.sub(y, l1);
     l1_delta = numeric.mul(l1_error, nonlin(l1, true));
-    syn1 = numeric.add(syn1, numeric.dot(numeric.transpose(l1), l2_delta));
     syn0 = numeric.add(syn0, numeric.dot(numeric.transpose(l0), l1_delta));
     updateDataTable("syn0", syn0);
-    updateDataTable("syn1", syn1);
-    updateDataTable("errordata", l2_error);
-    updateDataTable("outputdata", l2);
+    updateDataTable("errordata", l1_error);
+    updateDataTable("outputdata", l1);
     i++;
     $("#iterationinfo").text(i);
     console.log("iteration " + i);
     if (i >= iteration) {
       clearInterval(timer);
     }
-    
   }, 1);
+  
   $("#stopbtn").click(function(){
     clearInterval(timer);
   });
@@ -63,10 +46,14 @@ var X = [
 
 var y = [
   [0],
+  [0],
   [1],
-  [1],
-  [0]
+  [1]
 ];
+
+//train_neural(X, y, 1000, undefined);
+
+//UI Code of data table
 
 function updateDataTable(id, data) {
   var table = d3.select("#" + id);
@@ -172,10 +159,6 @@ $(function() {
   updateDataTable("inputdata", X);
   updateDataTable("targetdata", y);
   
-  $("#startbtn").click(function(){
-    train_neural(X, y, 1000);
-  });
-  
   var dragger = function() {
       this.ox = this.type == "rect" ? this.attr("x") : this.attr("cx");
       this.oy = this.type == "rect" ? this.attr("y") : this.attr("cy");
@@ -202,16 +185,12 @@ $(function() {
         "fill-opacity": 0
       }, 500);
     },
-    r = Raphael("canvas", 640, 480),
+    r = Raphael("canvas", 1200, 480),
     connections = [],
     shapes = [r.ellipse(190, 100, 20, 20),
       r.ellipse(190, 200, 20, 20),
       r.ellipse(190, 300, 20, 20),
-      r.ellipse(390, 80, 20, 20),
-      r.ellipse(390, 160, 20, 20),
-      r.ellipse(390, 240, 20, 20),
-      r.ellipse(390, 320, 20, 20),
-      r.ellipse(600, 200, 20, 20)
+      r.ellipse(400, 200, 20, 20)
     ];
   for (var i = 0, ii = shapes.length; i < ii; i++) {
     var color = Raphael.getColor();
@@ -224,25 +203,11 @@ $(function() {
     });
     shapes[i].drag(move, dragger, up);
   }
-  
+
   connections.push(r.connection(shapes[0], shapes[3], "#000"));
   connections.push(r.connection(shapes[1], shapes[3], "#000"));
   connections.push(r.connection(shapes[2], shapes[3], "#000"));
-  
-  connections.push(r.connection(shapes[0], shapes[4], "#000"));
-  connections.push(r.connection(shapes[1], shapes[4], "#000"));
-  connections.push(r.connection(shapes[2], shapes[4], "#000"));
-  
-  connections.push(r.connection(shapes[0], shapes[5], "#000"));
-  connections.push(r.connection(shapes[1], shapes[5], "#000"));
-  connections.push(r.connection(shapes[2], shapes[5], "#000"));
-  
-  connections.push(r.connection(shapes[0], shapes[6], "#000"));
-  connections.push(r.connection(shapes[1], shapes[6], "#000"));
-  connections.push(r.connection(shapes[2], shapes[6], "#000"));
-  
-  connections.push(r.connection(shapes[3], shapes[7], "#000"));
-  connections.push(r.connection(shapes[4], shapes[7], "#000"));
-  connections.push(r.connection(shapes[5], shapes[7], "#000"));
-  connections.push(r.connection(shapes[6], shapes[7], "#000"));
+  $("#startbtn").click(function(){
+    train_neural(X, y, 10000);
+  });
 });
